@@ -1,0 +1,10 @@
+
+Wed 27 Nov 2019 04:13:09 PM EST
+
+From 354625c
+  - the color schemes are loaded from the `cmus_theme_dir` now
+  - the `cmus_theme_dir` is cmus_config_dir + "/themes"
+  - `cmus_playlist_dir` is always cmus_config_dir + "/playlists"
+  - idk what playlist moving was about but it's gone now
+  - the configuration file is in the config dir now. The whole rc
+  - so, no need to load optional static config

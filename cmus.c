@@ -29,6 +29,7 @@
 #include "utils.h"
 #include "path.h"
 #include "options.h"
+#include "command_mode.h"
 #include "xmalloc.h"
 #include "debug.h"
 #include "load_dir.h"
@@ -96,6 +97,34 @@ void cmus_prev(void)
 
 	if (play_library) {
 		info = lib_goto_prev();
+	} else {
+		info = pl_goto_prev();
+	}
+
+	if (info)
+		player_set_file(info);
+}
+
+void cmus_next_album(void)
+{
+	struct track_info *info;
+
+	if (play_library) {
+		info = lib_goto_next_album();
+	} else {
+		info = pl_goto_next();
+	}
+
+	if (info)
+		player_set_file(info);
+}
+
+void cmus_prev_album(void)
+{
+	struct track_info *info;
+
+	if (play_library) {
+		info = lib_goto_prev_album();
 	} else {
 		info = pl_goto_prev();
 	}
@@ -206,12 +235,68 @@ static int save_playlist_cb(void *data, struct track_info *ti)
 	const char nl = '\n';
 	int rc;
 
-	rc = write_all(fd, ti->filename, strlen(ti->filename));
+
+	char *ft = NULL;
+	if (pl_env_vars && *pl_env_vars && *ti->filename != '\x1F') {
+		// see handle_line in job.c for more information about how this works
+
+		for (char **v = pl_env_vars; *v; v++) {
+			if (!**v)
+				continue;
+
+			const char *x = getenv(*v);
+			if (!x || !*x)
+				continue;
+			size_t xl = strlen(x);
+
+#ifdef _WIN32
+			// Windows is case-insensitive and doesn't have strncmp,
+			// plus cmus always uses a forward slash for internal
+			// paths.
+			const char *wna = ti->filename;
+			const char *wnb = x;
+			size_t wnn = xl;
+			while (wnn-- && (tolower(*wna) == tolower(*wnb) || (*wna == '/' && *wnb == '\\'))) {
+				if (!wnn || !*wna || !*wnb)
+					break;
+				wna++;
+				wnb++;
+			}
+			if (*wna || *wnb)
+				continue;
+#else
+			if (strncmp(ti->filename, x, xl) != 0)
+				continue;
+#endif
+
+			// Keep the '/' at the beginning of the path, and only
+			// use the env var if it is a dir.
+			if (ti->filename[xl-1] == '/')
+				xl--;
+			if (ti->filename[xl] != '/')
+				continue;
+
+			size_t vl = strlen(*v);
+			char *fc = ft = xnew(char, 1 + vl + 1 + strlen(ti->filename + xl) + 1);
+			*fc++ = '\x1F';
+			strncpy(fc, *v, vl);
+			fc += vl;
+			*fc++ = '\x1F';
+			strcpy(fc, ti->filename + xl);
+		}
+	}
+
+	rc = write_all(fd, ft ? ft : ti->filename, strlen(ft ? ft : ti->filename));
+
+
 	if (rc == -1)
 		return -1;
 	rc = write_all(fd, &nl, 1);
 	if (rc == -1)
 		return -1;
+
+	free(ft);
+
 	return 0;
 }
 
@@ -508,4 +593,8 @@ void cmus_raise_vte(void)
 			}
 		}
 	}
+}
+
+bool cmus_queue_active(void) {
+	return play_queue_active;
 }

@@ -346,7 +346,70 @@ static int handle_line(void *data, const char *line)
 	if (is_http_url(line) || is_cue_url(line)) {
 		add_url(line);
 	} else {
-		char *absolute = path_absolute_cwd(line, data);
+		char *absolute = NULL;
+		if (*line == '\x1F') {
+			// We use \x1F as the variable delimiter since it won't
+			// appear in a filename, it won't show up in the
+			// console, and it won't require changes to be made
+			// elsewhere for the variable handling.
+
+			const char *ve = strchr(line+1, '\x1F');
+			char *v = ve
+				? xstrndup(line+1, ve-line-1)
+				: xstrdup(line+1);
+			ve++;
+
+			// If the env var is not found or is empty, we leave the
+			// filename as-is. Even though this will result in
+			// errors (the path won't exist, and it'll start with
+			// 0x1b), it will allow the env var substitution to be
+			// preserved when saving so the playlist isn't
+			// destroyed.
+
+			// FIXME: this isn't actually true since it'll discard
+			// tracks which aren't found in the cache...
+
+			// TODO: see if there's a way we can preserve the play
+			// count info from the cache (speaking of that, does it
+			// even belong there in the first place?...)
+
+			// ... maybe the solution to both of these is to use
+			// this config option for the cache entries too?
+
+			// Note that when saving, the env var may not be the
+			// same as the original one used when loading since the
+			// substition is based on the pl_env_vars option in
+			// order. This is intentional.
+
+			const char *x = getenv(v);
+			if (x && *x) {
+				// Note that the remaining filename will always
+				// begin with a path separator when saved, just
+				// in case the env var doesn't have its own at
+				// the end.
+
+				char *fc = absolute = xmalloc(strlen(x) + strlen(ve) + 1);
+				for (const char *c = x; *c; c++) {
+#ifdef _WIN32
+					// cmus always uses forward slashes
+					// internally, and Windows accepts
+					// either.
+					if (*c == '\\')
+						*fc++ = '/';
+					else
+#endif
+					*fc++ = *c;
+				}
+				strcpy(fc, ve);
+
+				d_print("substituted filename '%s' => '%s' (%s='%s')\n", line, absolute, v, x);
+			}
+
+			free(v);
+		}
+		if (!absolute)
+			absolute = path_absolute_cwd(line, data);
+
 		add_file(absolute, 0);
 		free(absolute);
 	}

@@ -23,6 +23,7 @@
 
 extern const char *cmus_config_dir;
 extern const char *cmus_playlist_dir;
+extern const char *cmus_theme_dir;
 extern const char *cmus_socket_path;
 extern const char *cmus_data_dir;
 extern const char *cmus_lib_dir;
