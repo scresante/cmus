@@ -47,6 +47,5 @@ void browser_up(void);
 void browser_enter(void);
 void browser_delete(void);
 void browser_reload(void);
-void browser_toggle_show_hidden(void);
 
 #endif
