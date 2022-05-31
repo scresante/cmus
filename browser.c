@@ -25,6 +25,7 @@
 #include "misc.h"
 #include "options.h"
 #include "uchar.h"
+#include "debug.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -88,7 +89,10 @@ static int SORT_BY_CTIME = 1;
 /* only works for BROWSER_ENTRY_DIR and BROWSER_ENTRY_FILE */
 static int entry_cmp(const struct browser_entry *a, const struct browser_entry *b)
 {
+	return ctimecmp(a->name, b->name);
+    /* printf("doing a compare\n"); */
 	if (a->type == BROWSER_ENTRY_DIR) {
+        /* _debug_print("BROWSER", "%s: %s<>%s\n", "hello", a->name, b->name); */
 		if (b->type == BROWSER_ENTRY_FILE)
 			return -1;
 		if (!strcmp(a->name, "../"))
@@ -105,7 +109,7 @@ static int entry_cmp(const struct browser_entry *a, const struct browser_entry *
     }
 	if (b->type == BROWSER_ENTRY_DIR)
 		return 1;
-	return strcmp(a->name, b->name);
+	return ctimecmp(a->name, b->name);
 }
 
 static char *fullname(const char *path, const char *name)
