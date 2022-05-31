@@ -33,6 +33,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/mman.h>
+#include <time.h>
 
 struct window *browser_win;
 struct searchable *browser_searchable;
@@ -68,6 +69,14 @@ static int hidden_filter(const char *name, const struct stat *s)
 	return 1;
 }
 
+static time_t getFileModifiedTime(const char *path)
+{
+    struct stat attr;
+    if (stat(path, &attr) == 0)
+        return attr.st_mtime;
+    return 0;
+}
+static int SORT_BY_CTIME = 1;
 /* only works for BROWSER_ENTRY_DIR and BROWSER_ENTRY_FILE */
 static int entry_cmp(const struct browser_entry *a, const struct browser_entry *b)
 {
@@ -82,6 +91,12 @@ static int entry_cmp(const struct browser_entry *a, const struct browser_entry *
 	}
 	if (b->type == BROWSER_ENTRY_DIR)
 		return 1;
+    if (SORT_BY_CTIME == 1) {
+        time_t ll = getFileModifiedTime(a->name),
+               lr = getFileModifiedTime(b->name);
+        if (ll > lr) return -1;
+        if (ll < lr) return 1;
+    }
 	return strcmp(a->name, b->name);
 }
 
