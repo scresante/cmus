@@ -18,6 +18,7 @@
 
 #include "utils.h"
 #include "job.h"
+#include "misc.h"
 #include "worker.h"
 #include "cache.h"
 #include "xmalloc.h"
@@ -238,7 +239,7 @@ static int dir_entry_cmp(const void *ap, const void *bp)
 	struct dir_entry *a = *(struct dir_entry **)ap;
 	struct dir_entry *b = *(struct dir_entry **)bp;
 
-	return strcmp(a->name, b->name);
+	return ctimecmp(a->name, b->name);
 }
 
 static int dir_entry_cmp_reverse(const void *ap, const void *bp)
@@ -246,7 +247,7 @@ static int dir_entry_cmp_reverse(const void *ap, const void *bp)
 	struct dir_entry *a = *(struct dir_entry **)ap;
 	struct dir_entry *b = *(struct dir_entry **)bp;
 
-	return strcmp(b->name, a->name);
+	return ctimecmp(b->name, a->name);
 }
 
 static int points_within_and_visible(const char *target, const char *root)
