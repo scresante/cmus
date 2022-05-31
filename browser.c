@@ -76,6 +76,14 @@ static time_t getFileModifiedTime(const char *path)
         return attr.st_mtime;
     return 0;
 }
+
+static int ctimecmp(const char *ll, const char *lr) {
+    time_t tl = getFileModifiedTime(ll),
+           tr = getFileModifiedTime(lr);
+    if (tl > tr) return -1;
+    if (tl < tr) return 1;
+    return 0;
+}
 static int SORT_BY_CTIME = 1;
 /* only works for BROWSER_ENTRY_DIR and BROWSER_ENTRY_FILE */
 static int entry_cmp(const struct browser_entry *a, const struct browser_entry *b)
@@ -87,16 +95,16 @@ static int entry_cmp(const struct browser_entry *a, const struct browser_entry *
 			return -1;
 		if (!strcmp(b->name, "../"))
 			return 1;
+        if (SORT_BY_CTIME) {
+            return ctimecmp(a->name, b->name);
+        }
 		return strcmp(a->name, b->name);
 	}
+    if (SORT_BY_CTIME) {
+        return ctimecmp(a->name, b->name);
+    }
 	if (b->type == BROWSER_ENTRY_DIR)
 		return 1;
-    if (SORT_BY_CTIME == 1) {
-        time_t ll = getFileModifiedTime(a->name),
-               lr = getFileModifiedTime(b->name);
-        if (ll > lr) return -1;
-        if (ll < lr) return 1;
-    }
 	return strcmp(a->name, b->name);
 }
 
