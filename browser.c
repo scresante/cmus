@@ -70,6 +70,21 @@ static int hidden_filter(const char *name, const struct stat *s)
 	return 1;
 }
 
+static time_t getFileModifiedTime(const char *path)
+{
+    struct stat attr;
+    if (stat(path, &attr) == 0)
+        return attr.st_mtime;
+    return 0;
+}
+
+static int ctimecmp(const char *ll, const char *lr) {
+    time_t tl = getFileModifiedTime(ll),
+           tr = getFileModifiedTime(lr);
+    if (tl > tr) return -1;
+    if (tl < tr) return 1;
+    return 0;
+}
 static int SORT_BY_CTIME = 1;
 /* only works for BROWSER_ENTRY_DIR and BROWSER_ENTRY_FILE */
 static int entry_cmp(const struct browser_entry *a, const struct browser_entry *b)

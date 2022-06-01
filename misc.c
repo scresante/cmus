@@ -34,7 +34,6 @@
 #include <dirent.h>
 #include <stdarg.h>
 #include <pwd.h>
-#include <time.h>
 
 const char *cmus_config_dir = NULL;
 const char *cmus_playlist_dir = NULL;
@@ -361,20 +360,4 @@ void shuffle_array(void *array, size_t n, size_t size)
 		memcpy(arr + j * size, arr + i * size, size);
 		memcpy(arr + i * size, tmp, size);
 	}
-}
-time_t get_file_ctime(const char *path)
-{
-    struct stat attr;
-    if (stat(path, &attr) == 0)
-        return attr.st_mtime;
-    return 0;
-}
-
-int ctimecmp(const char *ll, const char *lr)
-{
-    time_t tl = get_file_ctime(ll),
-           tr = get_file_ctime(lr);
-    if (tl > tr) return -1;
-    if (tl < tr) return 1;
-    return 0;
 }

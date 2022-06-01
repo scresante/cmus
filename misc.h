@@ -20,7 +20,6 @@
 #define CMUS_MISC_H
 
 #include <stddef.h>
-#include <time.h>
 
 extern const char *cmus_config_dir;
 extern const char *cmus_playlist_dir;
@@ -51,6 +50,5 @@ int replaygain_decode(unsigned int field, int *gain);
 
 char *expand_filename(const char *name);
 void shuffle_array(void *array, size_t n, size_t size);
-time_t get_file_ctime(const char *path);
-int ctimecmp(const char *ll, const char *lr);
+
 #endif
